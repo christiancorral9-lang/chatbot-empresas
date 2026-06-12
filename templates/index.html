@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente TechStore</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .chat-container {
+            width: 420px;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .chat-header {
+            background: #1a1a2e;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #4f46e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .header-info h3 {
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .header-info p {
+            color: #9ca3af;
+            font-size: 11px;
+        }
+
+        .status {
+            margin-left: auto;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+
+        .chat-messages {
+            padding: 1rem;
+            min-height: 380px;
+            max-height: 380px;
+            overflow-y: auto;
+            background: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mensaje {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .mensaje.usuario {
+            flex-direction: row-reverse;
+        }
+
+        .mensaje-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #4f46e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .mensaje.usuario .mensaje-avatar {
+            background: #e5e7eb;
+            color: #4b5563;
+        }
+
+        .burbuja {
+            background: white;
+            border-radius: 0 12px 12px 12px;
+            padding: 10px 14px;
+            max-width: 75%;
+            font-size: 13px;
+            color: #1a1a2e;
+            border: 0.5px solid #e5e7eb;
+        }
+
+        .mensaje.usuario .burbuja {
+            background: #4f46e5;
+            border-radius: 12px 0 12px 12px;
+            color: white;
+            border: none;
+        }
+
+        .chat-input {
+            padding: 0.75rem 1rem;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .chat-input input {
+            flex: 1;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            padding: 8px 14px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .chat-input input:focus {
+            border-color: #4f46e5;
+        }
+
+        .btn-enviar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #4f46e5;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-enviar:hover {
+            background: #4338ca;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="avatar">🤖</div>
+            <div class="header-info">
+                <h3>Asistente TechStore</h3>
+                <p>En línea</p>
+            </div>
+            <div class="status"></div>
+        </div>
+
+        <div class="chat-messages" id="mensajes">
+            <div class="mensaje">
+                <div class="mensaje-avatar">🤖</div>
+                <div class="burbuja">
+                    ¡Hola! Soy el asistente de TechStore. ¿En qué puedo ayudarte hoy?
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input">
+            <input 
+                type="text" 
+                id="inputMensaje" 
+                placeholder="Escribe tu pregunta..."
+                onkeypress="if(event.key==='Enter') enviarMensaje()"
+            />
+            <button class="btn-enviar" onclick="enviarMensaje()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        async function enviarMensaje() {
+            const input = document.getElementById("inputMensaje");
+            const mensajes = document.getElementById("mensajes");
+            const texto = input.value.trim();
+
+            if (!texto) return;
+
+            // Mensaje del usuario
+            mensajes.innerHTML += `
+                <div class="mensaje usuario">
+                    <div class="mensaje-avatar">👤</div>
+                    <div class="burbuja">${texto}</div>
+                </div>`;
+
+            input.value = "";
+            mensajes.scrollTop = mensajes.scrollHeight;
+
+            // Llamar al servidor
+            const res = await fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ pregunta: texto })
+            });
+
+            const data = await res.json();
+
+            // Respuesta del asistente
+            mensajes.innerHTML += `
+                <div class="mensaje">
+                    <div class="mensaje-avatar">🤖</div>
+                    <div class="burbuja">${data.respuesta}</div>
+                </div>`;
+
+            mensajes.scrollTop = mensajes.scrollHeight;
+        }
+    </script>
+</body>
+</html>
