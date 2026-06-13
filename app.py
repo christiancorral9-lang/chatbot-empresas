@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from database import guardar_mensaje, obtener_conversaciones
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -44,6 +45,15 @@ def chat():
 def historial():
     conversaciones = obtener_conversaciones()
     return render_template("historial.html", conversaciones=conversaciones)
+
+@app.route("/admin")
+def admin():
+    conversaciones = obtener_conversaciones()
+    total_hoy = sum(1 for c in conversaciones if c[0].startswith(datetime.now().strftime("%Y-%m-%d")))
+    return render_template("admin.html", 
+                         conversaciones=conversaciones,
+                         total_hoy=total_hoy,
+                         total_mes=len(conversaciones))
 
 if __name__ == "__main__":
     import os
